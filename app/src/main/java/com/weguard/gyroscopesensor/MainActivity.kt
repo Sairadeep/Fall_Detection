@@ -130,7 +130,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         axisZ /= omegaMagnitude
                     }
 
-                    if (omegaMagnitude > 1.2f) {
+                    if (omegaMagnitude > 1.8f) {
                         Utils.setGyroscopeDetection(1)
                         callStatus = true
                     } else {
@@ -215,6 +215,9 @@ fun EmergencyCall() {
                             arrayOf(Manifest.permission.CALL_PHONE),
                             100
                         )
+                    } else {
+                        Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }) {
                     Icon(
