@@ -1,42 +1,24 @@
 package com.weguard.gyroscopesensor
 
-import android.Manifest
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.net.Uri
 import android.os.Bundle
 import android.util.Half.EPSILON
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.weguard.gyroscopesensor.ui.theme.GyroscopeSensorTheme
 import kotlin.math.sqrt
 
@@ -48,7 +30,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private val gravity = FloatArray(3)
     private var callStatus: Boolean = false
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -58,7 +39,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    EmergencyCall()
+                    AppNavigations()
                 }
             }
         }
@@ -67,7 +48,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-        if (gyroscope != null) {
+        if (gyroscope != null && accelerometer != null) {
             Toast.makeText(
                 this@MainActivity,
                 "Gyroscope and Accelerometer sensors exists...!",
@@ -172,21 +153,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         } else {
             Toast.makeText(this@MainActivity, "Empty..!", Toast.LENGTH_SHORT).show()
         }
-
-        if (Utils.getGyroscopeDetection().intValue == 1 || Utils.getAccelerometerDetection().intValue == 1) {
-            Log.d("Crash Detection", "Crash....!")
-            Utils.setAccelerometerDetection(0)
-            Utils.setGyroscopeDetection(0)
-            if (callStatus) {
-                val intent = Intent(Intent.ACTION_CALL)
-                val phoneNumber = 1234567890
-                intent.data = Uri.parse("tel: $phoneNumber")
-                startActivity(intent)
-                callStatus = false
-            } else {
-                Toast.makeText(this@MainActivity, "Calling Emergency", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -194,56 +160,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmergencyCall() {
-    val context = LocalContext.current
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(text = "Engine", fontSize = 20.sp) },
-            actions = {
-                IconButton(onClick = {
-                    if (ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.CALL_PHONE
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        // Permission to be prompted
-                        ActivityCompat.requestPermissions(
-                            context as Activity,
-                            arrayOf(Manifest.permission.CALL_PHONE),
-                            100
-                        )
-                    } else {
-                        Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_question_mark_24),
-                        contentDescription = "Phone permission"
-                    )
-                }
-            }
-        )
-    }) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(it),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(text = "Emergency call back")
+fun AppNavigations() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "HomePage") {
+        composable(route = "HomePage") {
+            EmergencyCall(navController)
         }
+        composable(route = "DetectionPage") { IfDetectionHappened(navController) }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GyroscopeSensorTheme {
-        EmergencyCall()
-    }
-}
+
