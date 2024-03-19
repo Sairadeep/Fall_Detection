@@ -9,7 +9,6 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun IfDetectionHappened(navController: NavController) {
+fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
     val context = LocalContext.current
 //    launches a coroutine that gradually increases the value of progress. This causes the progress indicator to iterate up in turn.
     val loading = remember { mutableStateOf(false) }
@@ -56,6 +56,7 @@ fun IfDetectionHappened(navController: NavController) {
     }
     val iconState = remember { mutableStateOf(false) }
     val callStatus = remember { mutableStateOf(false) }
+    val clickState = remember { mutableStateOf(false) }
     val mediaPlayer: MediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.alarm)
     val receiver: BroadcastReceiver = remember {
         object : BroadcastReceiver() {
@@ -66,8 +67,8 @@ fun IfDetectionHappened(navController: NavController) {
                     scope.cancel()
                     loading.value = false
                     iconState.value = false
-                } else {
-                    Log.d("MediaPlayerState", "Not playing")
+                }else{
+                    Log.d("ScreenStateNow","mediaPlayerState: ${mediaPlayer.isPlaying}")
                 }
             }
         }
@@ -79,24 +80,30 @@ fun IfDetectionHappened(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Log.d("NavigationResult", "$toLoad")
+        LaunchedEffect(Unit) {
+//          LaunchedEffect guarantees that its code block is executed only once
+//          when the composable is initially composed.
+            if (!mediaPlayer.isPlaying) {
+                mediaPlayer.start()
+                loading.value = true
+                iconState.value = true
+                scope.launch {
+                    loadProgress { progress ->
+                        progressValue = progress
+                    }
+                    loading.value = false
+                    iconState.value = false
+                    callStatus.value = true
+                }
+            }
+        }
+        clickState.value = toLoad
         Spacer(modifier = Modifier.height(10.dp))
         Box(
             modifier = Modifier
                 .size(150.dp)
                 .clip(RoundedCornerShape(100))
-                .clickable {
-                    mediaPlayer.start()
-                    loading.value = true
-                    iconState.value = true
-                    scope.launch {
-                        loadProgress { progress ->
-                            progressValue = progress
-                        }
-                        loading.value = false
-                        iconState.value = false
-                        callStatus.value = true
-                    }
-                }
                 .background(color = Color.LightGray, RoundedCornerShape(100)),
             contentAlignment = Alignment.Center
         )
@@ -108,7 +115,7 @@ fun IfDetectionHappened(navController: NavController) {
                 tint = Color.Red
             ) else {
                 Text(
-                    text = "${(progressValue * 10).toInt()}",
+                    text = "${(progressValue * 15).toInt()}",
                     fontSize = 55.sp,
                     color = Color.Red,
                     fontWeight = FontWeight.Bold
@@ -120,7 +127,7 @@ fun IfDetectionHappened(navController: NavController) {
                     color = Color.Red,
                     trackColor = Color.Cyan,
                     progress = {
-                        // Changing it to { progressValue } instead of without adding parenthsis.
+                        // Changing it to { progressValue } instead of without adding parenthesis.
                         progressValue
                     }
                 )
@@ -153,8 +160,8 @@ fun IfDetectionHappened(navController: NavController) {
 
 
 suspend fun loadProgress(updateProgressBar: (Float) -> Unit) {
-    for (i in 1..10) {
-        updateProgressBar(i.toFloat() / 10)
+    for (i in 1..15) {
+        updateProgressBar(i.toFloat() / 15)
         delay(1000) // 1000 -> 1 sec
     }
 }

@@ -30,6 +30,7 @@ import androidx.navigation.NavController
 @Composable
 fun EmergencyCall(navController: NavController) {
     val context = LocalContext.current
+    val toLoadDetection  = true
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(text = "Engine", fontSize = 20.sp) },
@@ -72,7 +73,7 @@ fun EmergencyCall(navController: NavController) {
                 Utils.setAccelerometerDetection(0)
                 Utils.setGyroscopeDetection(0)
                 // navigate to detection page
-                navController.navigate("DetectionPage")
+                navController.navigate("DetectionPage/$toLoadDetection")
             }
         }
     }
