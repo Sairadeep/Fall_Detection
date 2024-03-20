@@ -56,8 +56,9 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
     }
     val iconState = remember { mutableStateOf(false) }
     val callStatus = remember { mutableStateOf(false) }
-    val clickState = remember { mutableStateOf(false) }
+    val pageState = remember { mutableStateOf(false) }
     val mediaPlayer: MediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.alarm)
+//    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     val receiver: BroadcastReceiver = remember {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -80,11 +81,12 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Log.d("NavigationResult", "$toLoad")
+        pageState.value = toLoad
+//        Log.d("NavigationResult", "$toLoad")
         LaunchedEffect(Unit) {
 //          LaunchedEffect guarantees that its code block is executed only once
 //          when the composable is initially composed.
-            if (!mediaPlayer.isPlaying) {
+            if (pageState.value && !mediaPlayer.isPlaying) {
                 mediaPlayer.start()
                 loading.value = true
                 iconState.value = true
@@ -96,9 +98,11 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
                     iconState.value = false
                     callStatus.value = true
                 }
+                pageState.value = false
+            } else {
+                Log.d("CurrentState", "Play nothing.")
             }
         }
-        clickState.value = toLoad
         Spacer(modifier = Modifier.height(10.dp))
         Box(
             modifier = Modifier
@@ -156,6 +160,22 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
         }
     }
 
+//  Unable to do anything on back navigation
+//    BackHandler(enabled = true, onBack = {
+//        navController.popBackStack("HomePage", false)
+//        if (audioManager.isMusicActive) {
+//            Toast.makeText(
+//                context,
+//                "${audioManager.isMusicActive} && ${mediaPlayer.isPlaying}}",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//            mediaPlayer.stop()
+//        }
+//        pageState.value = false
+//        loading.value = false
+//        iconState.value = false
+//        scope.cancel()
+//    })
 }
 
 

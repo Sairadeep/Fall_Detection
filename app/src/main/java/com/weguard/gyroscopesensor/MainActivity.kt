@@ -175,7 +175,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        Toast.makeText(this@MainActivity, "Accuracy: $accuracy", Toast.LENGTH_SHORT).show()
+//      Toast.makeText(this@MainActivity, "Accuracy: $accuracy", Toast.LENGTH_SHORT).show()
+        Log.d("Accuracy:", "$accuracy")
     }
 }
 
