@@ -1,6 +1,7 @@
 package com.weguard.gyroscopesensor
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.util.Log
@@ -26,11 +27,14 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyCall(navController: NavController) {
     val context = LocalContext.current
+//    val scope = rememberCoroutineScope()
     val toLoadDetection  = true
+//    val mediaPlayer: MediaPlayer = MediaPlayer.create(context, R.raw.alarm)
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(text = "Engine", fontSize = 20.sp) },
@@ -67,6 +71,19 @@ fun EmergencyCall(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+//            if (mediaPlayer.isPlaying) {
+//                mediaPlayer.stop()
+//            } else {
+//                Toast.makeText(
+//                    context,
+//                    "No media is being played -> ${mediaPlayer.isPlaying}",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//                scope.launch {
+//                    delay(3000)
+//                    mediaPlayer.stop()
+//                }
+//            }
             Text(text = "Emergency call back")
             if (Utils.getGyroscopeDetection().intValue == 1 || Utils.getAccelerometerDetection().intValue == 1) {
                 Log.d("Crash Detection", "Crash....!")

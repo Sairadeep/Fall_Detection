@@ -8,6 +8,8 @@ import android.content.IntentFilter
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,8 +44,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
@@ -57,8 +61,8 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
     val iconState = remember { mutableStateOf(false) }
     val callStatus = remember { mutableStateOf(false) }
     val pageState = remember { mutableStateOf(false) }
-    val mediaPlayer: MediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.alarm)
-//    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val mediaPlayer: MediaPlayer = MediaPlayer.create(context, R.raw.alarm)
+
     val receiver: BroadcastReceiver = remember {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -68,8 +72,8 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
                     scope.cancel()
                     loading.value = false
                     iconState.value = false
-                }else{
-                    Log.d("ScreenStateNow","mediaPlayerState: ${mediaPlayer.isPlaying}")
+                } else {
+                    Log.d("ScreenStateNow", "mediaPlayerState: ${mediaPlayer.isPlaying}")
                 }
             }
         }
@@ -153,29 +157,32 @@ fun IfDetectionHappened(navController: NavController, toLoad: Boolean) {
     DisposableEffect(context) {
         val filter = IntentFilter()
         filter.addAction(Intent.ACTION_SCREEN_OFF)
+        filter.addAction(Intent.ACTION_USER_BACKGROUND)
         context.registerReceiver(receiver, filter)
 
         onDispose {
             context.unregisterReceiver(receiver)
         }
     }
-
-//  Unable to do anything on back navigation
-//    BackHandler(enabled = true, onBack = {
-//        navController.popBackStack("HomePage", false)
-//        if (audioManager.isMusicActive) {
-//            Toast.makeText(
-//                context,
-//                "${audioManager.isMusicActive} && ${mediaPlayer.isPlaying}}",
-//                Toast.LENGTH_SHORT
-//            ).show()
-//            mediaPlayer.stop()
-//        }
-//        pageState.value = false
-//        loading.value = false
-//        iconState.value = false
-//        scope.cancel()
-//    })
+    //  Unable to do anything on back navigation as mediaPlayer.isPlaying return FALSE
+    BackHandler(enabled = true, onBack = {
+        Log.d(
+            "UserClickedBackButton",
+            "Navigating to previous screen ${mediaPlayer.isPlaying} && ${mediaPlayer.currentPosition} && ${mediaPlayer.audioSessionId}"
+        )
+        if (scope.isActive && loading.value && iconState.value) {
+            scope.cancel()
+            loading.value = false
+            iconState.value = false
+            navController.popBackStack()
+        }
+        navController.navigate("HomePage")
+//        Need to stop mediaPlayer but it isn't been stopped.
+        scope.launch {
+            delay(10000) // 10 sec's
+            mediaPlayer.stop()
+        }
+    })
 }
 
 
