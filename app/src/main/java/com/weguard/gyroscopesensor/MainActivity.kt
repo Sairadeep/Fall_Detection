@@ -134,6 +134,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     linearAcceleration[2] = event.values[2] - gravity[2]
 
                     // Gravity check needs to be added.
+                    // Check 1: Must be less than threshold
                     if (linearAcceleration[1] < fallThreshold) {
                         val x = abs(linearAcceleration[1])
                         xArray.add(x)
@@ -143,6 +144,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                                 val iNow = xArray[i]
                                 val iOnIncrement = xArray[i + 1]
                                 Log.d("nowX", "i: $iNow, i+1: $iOnIncrement")
+                                // check 2:Acceleration needs to be increased
                                 if (iNow < iOnIncrement) {
                                     // Fall need to have an sudden increase.
                                     CoroutineScope(Dispatchers.IO).launch {
@@ -151,6 +153,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                                         Log.d("linearAcceleration", "Y: $y") // ~ 0f
                                         val z = x - y
                                         val r = x / 2
+                                            // Check 3: Acceleration before and after 800 ms should be greater than its half.
                                         callStatus = if (z > r && y > 0.5) {
                                             Log.d("FallState", "Fall x: $x, y: $y, z: $z, r: $r")
                                             Utils.setAccelerometerDetection(1)
